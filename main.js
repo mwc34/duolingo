@@ -491,12 +491,15 @@ function pickSets(number = 1) {
             let t = set.children[0].children[0].children[0].children[0].children[2].children[0]
             let level = t.childElementCount == 2 ? Number(t.children[1].innerHTML) : 0
             if (level < 5) {
-                while(!getElementByDataTest('start-button')) {
+                if (!getElementByDataTest('start-button')) {
                     set.children[0].click()
+                    timeout = setTimeout(() => {startSet(number)}, 1000)
                 }
-                getElementByDataTest('start-button').click()
-                timeout = setTimeout(() => {startSet(number)}, 1000)
-                break
+                else {
+                    getElementByDataTest('start-button').click()
+                    timeout = setTimeout(() => {startSet(number)}, 1000)
+                    break
+                }
             }
         }
     }
