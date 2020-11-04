@@ -138,7 +138,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, foreign_id, native_id)
@@ -163,7 +162,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -189,7 +187,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -216,7 +213,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -251,7 +247,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -332,7 +327,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -377,7 +371,6 @@ function solveExercise() {
             var answer = ''
             if (correct_answers[hint_sentence]) {
                 answer = correct_answers[hint_sentence]
-                delete correct_answers[hint_sentence]
             }
             else {
                 answer = getTranslation(hint_sentence, native_id, foreign_id)
@@ -451,7 +444,13 @@ function solveSet(number = 1) {
                 else {
                     text = e.innerHTML
                 }
-                correct_answers[curr_hint_sentence] = trimText(text)
+                if (correct_answers[curr_hint_sentence] && text.includes(',')) {
+                    correct_answers[curr_hint_sentence] = trimText(text.split(',')[0])
+                }
+                else {
+                    correct_answers[curr_hint_sentence] = trimText(text)
+                }
+                
                 curr_hint_sentence = null
             }
             next_button.click()
@@ -460,6 +459,9 @@ function solveSet(number = 1) {
         else {
             let cont = true
             if (!document.getElementsByClassName('YQ0lZ _2LMXW _3vF5k _3iFZd').length) {
+                if (correct_answers[curr_hint_sentence]) {
+                    delete correct_answers[curr_hint_sentence]
+                }
                 cont = solveExercise(correct_answers)
                 
             }
@@ -469,6 +471,9 @@ function solveSet(number = 1) {
         }
     }
     else {
+        for (let key in correct_answers) {
+            delete correct_answers[key]
+        }
         number--
         if (number > 0) {
             timeout = setTimeout(() => {pickSets(number)}, 1000)
