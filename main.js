@@ -87,13 +87,36 @@ function getType() {
     }
 }
 
-function getHintSentence() {
+function getHintSentence(lesson_type) {
     let ele = getElementByDataTest('hint-sentence')
     let sent = ''
-    for (let token of ele.children) {
-        sent += token.innerHTML
+    if (ele) {
+        for (let token of ele.children) {
+            sent += token.innerHTML
+        }
     }
-    return sent
+    
+    switch (lesson_type) {
+        case null:
+            return null
+            
+        case type.TRANSLATE_FN:
+            return sent
+        case type.TRANSLATE_NF:
+            return sent
+        case type.WRITE_NF:
+            return getElementByDataTest('challenge-header').children[0].innerHTML.match(/“([^”]*)”/)[1]
+        case type.CHOOSE_PIC_NF:
+            return getElementByDataTest('challenge-header').children[0].innerHTML.match(/“([^”]*)”/)[1]
+        case type.CHOOSE_TEXT_NF:
+            return document.getElementsByClassName('_3-JBe')[0].innerHTML
+        case type.CLICK_FN:
+            return sent
+        case type.CLICK_NF:
+            return sent
+        case type.COMPLETE_NF:
+            return sent
+    }
 }
 
 function solveExercise() {
@@ -110,7 +133,7 @@ function solveExercise() {
             return true
             
         case type.TRANSLATE_FN:
-            var hint_sentence = getHintSentence()
+            var hint_sentence = getHintSentence(type.TRANSLATE_FN)
             var answer_box = getElementByDataTest('challenge-translate-input')
             var answer = ''
             if (correct_answers[hint_sentence]) {
@@ -135,7 +158,7 @@ function solveExercise() {
             return true
             
         case type.TRANSLATE_NF:
-            var hint_sentence = getHintSentence()
+            var hint_sentence = getHintSentence(type.TRANSLATE_NF)
             var answer_box = getElementByDataTest('challenge-translate-input')
             var answer = ''
             if (correct_answers[hint_sentence]) {
@@ -160,7 +183,7 @@ function solveExercise() {
             return true
             
         case type.WRITE_NF:
-            var hint_sentence = getElementByDataTest('challenge-header').children[0].innerHTML.match(/“([^”]*)”/)[1]
+            var hint_sentence = getHintSentence(type.WRITE_NF)
             
             var answer_box = getElementByDataTest('challenge-text-input')
             var answer = ''
@@ -186,7 +209,7 @@ function solveExercise() {
             return true
             
         case type.CHOOSE_PIC_NF:
-            var hint_sentence = getElementByDataTest('challenge-header').children[0].innerHTML.match(/“([^”]*)”/)[1]
+            var hint_sentence = getHintSentence(type.CHOOSE_PIC_NF)
             
             var answer_boxes = getElementsByDataTest('challenge-choice-card')
 
@@ -221,7 +244,7 @@ function solveExercise() {
             return true
             
         case type.CHOOSE_TEXT_NF:
-            var hint_sentence = document.getElementsByClassName('_3-JBe')[0].innerHTML
+            var hint_sentence = getHintSentence(type.CHOOSE_TEXT_NF)
             
             var answer_boxes = getElementsByDataTest('challenge-choice')
 
@@ -256,7 +279,7 @@ function solveExercise() {
             return true
         
         case type.CLICK_FN:
-            var hint_sentence = getHintSentence()
+            var hint_sentence = getHintSentence(type.CLICK_FN)
             
             var click_tokens = Array.from(getElementsByDataTest('challenge-tap-token'))
             
@@ -302,7 +325,7 @@ function solveExercise() {
             return true
             
         case type.CLICK_NF:
-            var hint_sentence = getHintSentence()
+            var hint_sentence = getHintSentence(type.CLICK_NF)
             
             var click_tokens = Array.from(getElementsByDataTest('challenge-tap-token'))
             
@@ -348,7 +371,7 @@ function solveExercise() {
             return true
             
         case type.COMPLETE_NF:
-            var hint_sentence = getHintSentence()
+            var hint_sentence = getHintSentence(type.COMPLETE_NF)
             
             var answer_box = getElementByDataTest('challenge-text-input')
             var answer = ''
@@ -403,10 +426,11 @@ function solveExercise() {
     return false
 }
 
-function solveSet() {
+function solveSet(number = 1) {
     var next_button = getElementByDataTest('player-next')
     if (next_button) {
         let bg_color = window.getComputedStyle(next_button).backgroundColor
+        
         if ((bg_color == 'rgb(234, 43, 43)' || bg_color == 'rgb(88, 167, 0)')) {
             if (bg_color == 'rgb(234, 43, 43)' && curr_hint_sentence) {
                 let e = document.getElementsByClassName('_1UqAr _1sqiF')[0]
@@ -428,47 +452,59 @@ function solveSet() {
                     text = e.innerHTML
                 }
                 correct_answers[curr_hint_sentence] = trimText(text)
+                curr_hint_sentence = null
             }
-            curr_hint_sentence = null
             next_button.click()
-            timeout = setTimeout(solveSet, 500)
+            timeout = setTimeout(() => {solveSet(number)}, 500)
         }
         else {
             let cont = true
-            if (!curr_hint_sentence) {
+            if (!document.getElementsByClassName('YQ0lZ _2LMXW _3vF5k _3iFZd').length) {
                 cont = solveExercise(correct_answers)
+                
             }
             if (cont) {
-                timeout = setTimeout(() => {solveSet(correct_answers)}, 100)
+                timeout = setTimeout(() => {solveSet(number)}, 100)
             }
         }
-    }
-}
-
-function pickSet() {
-    let sets = getElementsByDataTest('skill')
-    
-    for (let set of sets) {
-        let t = set.children[0].children[0].children[0].children[0].children[2].children[0]
-        let level = t.childElementCount == 2 ? Number(t.children[1].innerHTML) : 0
-        if (level < 5) {
-            while(!getElementByDataTest('start-button')) {
-                set.children[0].click()
-            }
-            getElementByDataTest('start-button').click()
-            setTimeout(startSet, 1000)
-            break
-        }
-    }
-}
-
-function startSet() {
-    var next_button = getElementByDataTest('player-next')
-    if (next_button) {
-        solveSet()
     }
     else {
-        timeout = setTimeout(startSet, 1000)
+        number--
+        if (number > 0) {
+            timeout = setTimeout(() => {pickSets(number)}, 1000)
+        }
+    }
+}
+
+function pickSets(number = 1) {
+    let sets = getElementsByDataTest('skill')
+    if (!sets.length) {
+        timeout = setTimeout(() => {pickSets(number)}, 1000)
+    }
+    else {
+        for (let set of sets) {
+            let t = set.children[0].children[0].children[0].children[0].children[2].children[0]
+            let level = t.childElementCount == 2 ? Number(t.children[1].innerHTML) : 0
+            if (level < 5) {
+                while(!getElementByDataTest('start-button')) {
+                    set.children[0].click()
+                }
+                getElementByDataTest('start-button').click()
+                timeout = setTimeout(() => {startSet(number)}, 1000)
+                break
+            }
+        }
+    }
+}
+
+function startSet(number = 1) {
+    var next_button = getElementByDataTest('player-next')
+    if (next_button) {
+        curr_hint_sentence = null
+        solveSet(number)
+    }
+    else {
+        timeout = setTimeout(() => {startSet(number)}, 1000)
     }
 }
 
