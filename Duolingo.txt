@@ -1,0 +1,43 @@
+document.querySelectorAll('[data-test=""]')
+
+Type: challenge-header
+
+Info: hint-sentence
+
+Next: player-next
+
+EnterText: 
+
+challenge-translate-input
+challenge-text-input
+
+a = document.querySelectorAll('[data-test="player-next"]')
+b = document.querySelectorAll('[data-test="challenge-translate-input"]')
+
+
+
+var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+nativeInputValueSetter.call(TEXTAREA, INPUTVALUE);
+
+var ev2 = new Event('input', { bubbles: true});
+TEXTAREA.dispatchEvent(ev2);
+
+
+
+var a = document.querySelectorAll('[data-test="challenge-translate-input"]')[0]; 
+var b = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set; 
+b.call(a, 'I also am angry'); 
+var ev2 = new Event('input', { bubbles: true}); 
+a.dispatchEvent(ev2); 
+var c = document.querySelectorAll('[data-test="player-next"]')[0]; 
+c.click(); 
+c.click();
+
+
+
+var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+            + sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodeURI(sourceText);
+
+var result = JSON.parse(UrlFetchApp.fetch(url).getContentText());
+
+translatedText = result[0][0][0];
