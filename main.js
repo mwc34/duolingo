@@ -203,6 +203,20 @@ function solveExercise() {
             
             answer = trimText(answer)
             
+            var gender_boxes = getElementsByDataTest('challenge-judge-text')
+            if (gender_boxes.length) {
+                var to_click = 0
+                for (let i=0; i<gender_boxes.length; i++) {
+                    let gender = gender_boxes[i]
+                    if (gender.innerHTML == answer.split(' ')[0]) {
+                        to_click = i
+                        answer = answer.replace(/\S+\s/, '')
+                        break
+                    }
+                }
+                gender_boxes[to_click].click()
+            }
+            
             var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
             nativeInputValueSetter.call(answer_box, answer);
             var ev2 = new Event('input', { bubbles: true});
