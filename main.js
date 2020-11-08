@@ -596,6 +596,9 @@ function pickSets(number = 1) {
                     found_skill = true
                     break
                 }
+                else {
+                    set.children[0].click()
+                }
             }
         }
     }
