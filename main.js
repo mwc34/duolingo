@@ -14,6 +14,7 @@ var type = {
     CLICK_FN : 'click_fn',
     CLICK_NF : 'click_nf',
     COMPLETE_NF : 'complete_nf',
+    SELECT_F : 'select_f',
 }
 
 var correct_answers = {}
@@ -83,6 +84,9 @@ function getType() {
             
         case `Complete the translation`:
             return type.COMPLETE_NF
+            
+        case `Select the missing word`:
+            return type.SELECT_F
 
     }
 }
@@ -116,6 +120,8 @@ function getHintSentence(lesson_type) {
             return sent
         case type.COMPLETE_NF:
             return sent
+        case type.SELECT_F:
+            return getElementByDataTest('challenge-form-prompt').dataset.prompt
     }
 }
 
@@ -127,6 +133,9 @@ function solveExercise() {
             var t = getElementByDataTest('challenge-judge-text')
             if (t) {
                 t.click()
+            }
+            else if (document.getElementsByClassName('_14pB5').length > 0) {
+                document.getElementsByClassName('_1fGF7')[0].click()
             }
             var next_button = getElementByDataTest('player-next')
             next_button.click()
@@ -380,7 +389,7 @@ function solveExercise() {
             
             let parent = document.getElementsByClassName('_3f_Q3 _2FKqf _2ti2i sXpqy')[0]
             
-            let partial_answer = ''
+            var partial_answer = ''
             for (let i=0; i < parent.childElementCount; i++) {
                 if (!parent.children[i].childElementCount) {
                     partial_answer += parent.children[i].innerHTML
@@ -389,8 +398,8 @@ function solveExercise() {
             
             partial_answer = trimText(partial_answer)
             
-            let a_split = answer.split(' ')
-            let p_a_split = partial_answer.split(' ')
+            var a_split = answer.split(' ')
+            var p_a_split = partial_answer.split(' ')
             
             for (let i=0; i < Math.min(a_split.length, p_a_split.length); i++) {
                 if (a_split[i] != p_a_split[i]) {
@@ -415,44 +424,100 @@ function solveExercise() {
             next_button.click()
             
             return true
+            
+        case type.SELECT_F:
+            var hint_sentence = getHintSentence(type.SELECT_F)
+            
+            var answer_boxes = getElementsByDataTest('challenge-choice')
+
+            var answer = ''
+            if (correct_answers[hint_sentence]) {
+                answer = correct_answers[hint_sentence]
+            }
+            else {
+                answer = getTranslation(hint_sentence, native_id, foreign_id)
+            }
+            
+            answer = trimText(answer)
+            
+            partial_answer = trimText(hint_sentence)
+            
+            var a_split = answer.split(' ')
+            var p_a_split = partial_answer.split(' ')
+
+            for (let i=0; i < Math.min(a_split.length, p_a_split.length); i++) {
+                if (a_split[i] != p_a_split[i]) {
+                    answer = a_split[i]
+                    break
+                }
+            }
+            
+            var correct_box = 0
+            
+            for (let i=0; i < answer_boxes.length; i++) {
+                let answer_box = answer_boxes[i]
+                let text = trimText(answer_box.children[2].innerHTML)
+                if (answer == text) {
+                    correct_box = i
+                    break
+                }
+            }
+
+            answer_boxes[correct_box].click()
+            
+            var next_button = getElementByDataTest('player-next')
+            curr_hint_sentence = hint_sentence
+            next_button.click()
+            
+            return true
     }
     return false
+}
+
+function learnAnswer() {
+    var next_button = getElementByDataTest('player-next')
+    let bg_color = window.getComputedStyle(next_button).backgroundColor
+    if (bg_color == 'rgb(234, 43, 43)' && curr_hint_sentence) {
+        var e = document.getElementsByClassName('_1UqAr _1sqiF')[0]
+        var text = ''
+        if (e.childElementCount) {
+            for (let s of e.children) {
+                if (s.childElementCount) {
+                    for (let r of s.children) {
+                        if (text.length && text[text.length - 1] != ' ') {
+                            text += ' '
+                        }
+                        text += r.innerHTML
+                    }
+                }
+                else {
+                    if (text.length && text[text.length - 1] != ' ') {
+                        text += ' '
+                    }
+                    text += s.innerHTML
+                }
+            }
+        }
+        else {
+            text = e.innerHTML
+        }
+        if (correct_answers[curr_hint_sentence] && text.includes(',')) {
+            correct_answers[curr_hint_sentence] = trimText(text.split(',')[0])
+        }
+        else {
+            correct_answers[curr_hint_sentence] = trimText(text)
+        }
+        
+        curr_hint_sentence = null
+    }
 }
 
 function solveSet(number = 1) {
     var next_button = getElementByDataTest('player-next')
     if (next_button) {
         let bg_color = window.getComputedStyle(next_button).backgroundColor
-        
         if ((bg_color == 'rgb(234, 43, 43)' || bg_color == 'rgb(88, 167, 0)')) {
-            if (bg_color == 'rgb(234, 43, 43)' && curr_hint_sentence) {
-                let e = document.getElementsByClassName('_1UqAr _1sqiF')[0]
-                let text = ''
-                for (let s of e.children) {
-                    if (s.childElementCount) {
-                        for (let r of s.children) {
-                            text += r.innerHTML + ' '
-                        }
-                    }
-                    else {
-                        text += s.innerHTML + ' '
-                    }
-                }
-                if (text.length > 0) {
-                    text = text.slice(0, -1)
-                }
-                else {
-                    text = e.innerHTML
-                }
-                if (correct_answers[curr_hint_sentence] && text.includes(',')) {
-                    correct_answers[curr_hint_sentence] = trimText(text.split(',')[0])
-                }
-                else {
-                    correct_answers[curr_hint_sentence] = trimText(text)
-                }
-                
-                curr_hint_sentence = null
-            }
+            learnAnswer()
             next_button.click()
             timeout = setTimeout(() => {solveSet(number)}, 500)
         }
@@ -482,26 +547,47 @@ function solveSet(number = 1) {
 }
 
 function pickSets(number = 1) {
+    let found_skill = false
+    
     let sets = getElementsByDataTest('skill')
-    if (!sets.length) {
-        timeout = setTimeout(() => {pickSets(number)}, 1000)
-    }
-    else {
+    if (sets.length) {
         for (let set of sets) {
             let t = set.children[0].children[0].children[0].children[0].children[2].children[0]
             let level = t.childElementCount == 2 ? Number(t.children[1].innerHTML) : 0
             if (level < 5) {
-                if (!getElementByDataTest('start-button')) {
-                    set.children[0].click()
-                    timeout = setTimeout(() => {startSet(number)}, 1000)
+                let start_button = getElementByDataTest('start-button')
+                let locked_button = document.getElementsByClassName('twkSI _25Mqa whuSQ _2gwtT _1nlVc _2fOC9 t5wFJ _3dtSu _25Cnc _3yAjN UCrz7 yTpGk')[0]
+                if (!start_button) {
+                    if (locked_button && locked_button.innerHTML == 'LOCKED') {
+                        // CHECKPOINTS
+                        let checkpoints = getElementsByDataTest('checkpoint-badge')
+                        for (let c of checkpoints) {
+                            c.click()
+                            let c_start_button = getElementByDataTest('checkpoint-start-button')
+                            if (c_start_button && c_start_button.innerHTML == 'START') {
+                                c_start_button.click()
+                                timeout = setTimeout(() => {startSet(number)}, 1000)
+                                return true
+                            }
+                        }
+                        
+                    }
+                    else {
+                        set.children[0].click()
+                    }
                 }
-                else {
-                    getElementByDataTest('start-button').click()
+                else if (start_button.innerHTML == 'START') {
+                    start_button.click()
                     timeout = setTimeout(() => {startSet(number)}, 1000)
+                    found_skill = true
                     break
                 }
             }
         }
+    }
+    
+    if (!found_skill) {
+        timeout = setTimeout(() => {pickSets(number)}, 1000)
     }
 }
 
