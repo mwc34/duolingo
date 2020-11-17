@@ -320,11 +320,18 @@ function solveExercise() {
                 for (let j=0; j < click_tokens.length; j++) {
                     let token = click_tokens[j]
                     let text = trimText(token.innerHTML)
-                    if (text == word || (word.includes("'") && word.split("'")[0] == text)) {
+                    if (text == word || (word.includes("'") && word.match(new RegExp(String.raw`\b${text}`)) && ((e) => {
+                            for (let t of click_tokens) {
+                                if (e == t.innerHTML) {
+                                    return true
+                                }
+                            }
+                            return false
+                    })(word.replace(text, "")))) {
                         token.click()
                         click_tokens.splice(j, 1)
-                        if (text != word && (word.includes("'") && word.split("'")[0] == text)) {
-                            answer[i] = "'" + word.split("'")[1]
+                        if (text != word) {
+                            answer[i] = word.replace(text, "")
                             i--
                         }
                         clicked = true
@@ -365,11 +372,18 @@ function solveExercise() {
                 for (let j=0; j < click_tokens.length; j++) {
                     let token = click_tokens[j]
                     let text = trimText(token.innerHTML)
-                    if (text == word || (word.includes("'") && word.split("'")[0] == text)) {
+                    if (text == word || (word.includes("'") && word.match(new RegExp(String.raw`\b${text}`)) && ((e) => {
+                            for (let t of click_tokens) {
+                                if (e == t.innerHTML) {
+                                    return true
+                                }
+                            }
+                            return false
+                    })(word.replace(text, "")))) {
                         token.click()
                         click_tokens.splice(j, 1)
-                        if (text != word && (word.includes("'") && word.split("'")[0] == text)) {
-                            answer[i] = "'" + word.split("'")[1]
+                        if (text != word) {
+                            answer[i] = word.replace(text, "")
                             i--
                         }
                         clicked = true
@@ -498,14 +512,14 @@ function learnAnswer() {
             for (let s of e.children) {
                 if (s.childElementCount) {
                     for (let r of s.children) {
-                        if (text.length && text[text.length - 1] != ' ') {
+                        if (false && text.length && text[text.length - 1] != ' ') {
                             text += ' '
                         }
                         text += r.innerHTML
                     }
                 }
                 else {
-                    if (text.length && text[text.length - 1] != ' ') {
+                    if (false && text.length && text[text.length - 1] != ' ') {
                         text += ' '
                     }
                     text += s.innerHTML
